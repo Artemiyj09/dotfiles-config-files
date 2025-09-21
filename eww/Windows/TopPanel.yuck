@@ -1,0 +1,592 @@
+(defpoll time :interval "1s"
+  `date +"%I󰇙%M"`
+)
+
+(defpoll date :interval "1s"
+  `date +"%e-%m"`
+)
+
+(defpoll volume :interval "200ms" "amixer get Master | grep -oP '\\[\\d+%\\]' | head -1 | tr -d '[]%'")
+(defpoll date-word :interval "12h"
+  `date +"%A, %-m %B"`
+)
+
+(defpoll storage :interval "30s"
+  `df / | awk 'NR==2 {gsub(/%/, "", $5); print $5}'`
+)
+(defvar storagehover false)
+
+(defvar clock_hovered false)
+
+(defvar wifi false)
+
+(defvar power true)
+(defvar menubuttonpressed false)
+
+(defvar workplacerev false)
+;left screen
+(defvar clickworkspace1 2)(defvar clickworkspace2 1)(defvar clickworkspace3 1)
+;right screen
+(defvar clickworkspace4 2)(defvar clickworkspace5 1)(defvar clickworkspace6 1)
+(defwidget clock []
+  (box :orientation "horizontal" :class "far-background"
+    (label :text "${time}" :class "active-text")
+  )
+)
+(defwidget date []
+  (box :orientation "horizontal" :class "far-background" :tooltip "${date-word}"
+    (label :text "${date}" :class "active-text")
+    )
+  )
+
+(defwidget date-time []
+  (eventbox
+    :onhover "eww update clock_hovered=true"
+    :onhoverlost "eww update clock_hovered=false" 
+    (box :orientation "horizontal" :height 40:space-evenly false :class "far-background":halign "center" :tooltip "${date-word}"
+    (clock)
+      (revealer :reveal clock_hovered :transition "crossfade" :duration "400ms"
+      (box :class "far-background" :space-evenly false (date))) 
+      )
+    )
+  )
+(defwidget wifi []
+  (eventbox 
+    :onhover "eww update wifi=true"
+    :onhoverlost "eww update wifi=false"
+  (box :orientation "horizontal" :space-evenly false :class "close-background" :halign "end" :spacing 10 :width 25
+  (label :text "󰤨" :class "wifii")
+    (revealer :reveal wifi :transition "slideleft" :duration "350ms"
+      (box (label :text "Connected" :class "wifi"))))))
+
+(defwidget storage []
+  (eventbox 
+    :onhover "eww update storagehover=true"
+    :onhoverlost "eww update storagehover=false"
+  (box :orientation "horizontal" :space-evenly false :class "close-background" :halign "end" :spacing 10
+  (label :text "" :class "wifii")
+    (revealer :reveal storagehover :transition "slideright" :duration "700ms"
+      (box (progress :class "progress" :orientation "horizontal" :halign "center" :valign "center" :value {EWW_DISK["/"].used_perc}))))))
+
+(defwidget sep []
+  (box 
+  (label :text "" :class "sep")))
+
+(defwidget minisep []
+  (box
+  (label :text "|" :class "minisep")))
+
+(defwidget power []
+  (box :vexpand true :hexpand true :class "powerbutton1293123" (eventbox  :valign "center" :halign "start"
+(box :space-evenly false (button :onclick "eww open powermenu" :onrightclick "eww close powermenu"
+    (label :text "󰐥" :class "powerbutton" ))))))
+
+(defwidget left []
+  (box :orientation "h" :halign "start" :space-evenly false :spacing 10 
+    ;workspacerevealbutton
+    (workspacebutton)))
+;MENU BUTTON
+(defwidget center []
+  (box :orientation "h" :halign "center" :space-evenly false :spacing 10 (box :width 275 :class "test" (stack :selected 0 (button :onclick "eww open menu" "Menu")) )))
+
+(defwidget right []  
+  (box :orientation "h" :halign "end" :space-evenly false :spacing 10 :valign "center"
+  
+    ;Wifi,Storage - done 
+    (sep)
+    (storage)
+    (wifi)  
+    ;Clock-Done
+    (sep)
+    (date-time)  
+    ;Powermenu
+    (sep)
+    (power)))
+
+;PANEL
+(defwindow panel
+  :geometry (geometry 
+            :y "10"
+            :height "35" 
+            :width "2250"
+            :anchor "top center")
+  :windowtype "desktop"
+  :focusable true
+  :layer "top"
+  :wm-ignore "false"
+  :stacking "bg"
+  
+  (box :orientation "horizontal" :class "panel-background"
+  (left :class "test" :halign "start")
+  
+  (center :halign "center")
+  
+  (right :halign "end")
+  )
+)
+
+(defwidget vbox1 []
+(box :space-evenly false :width 35 :height 5))
+
+(defwidget vsepar1 []
+(box :space-evenly false :halign "center" 
+  (box :width 30 :valign "center" :class "sep1" :orientation "vertical")
+))
+;bottom-bar
+(defwidget separ1 []
+(box :orientation "vertical" :spacing 2
+  (vbox1)  
+(vsepar1)))
+
+(defwidget vbox2 []
+(box :space-evenly false :width 15 :height 5))
+
+(defwidget vsepar2 []
+(box :space-evenly false :halign "center" 
+  (box :width 30 :valign "center" :class "sep1" :orientation "vertical")
+))
+;top-bar
+(defwidget separ2 []
+(box :orientation "vertical" :spacing 2
+(vsepar2)
+(vbox2)))
+
+;powermenustuff
+(defwidget pl []
+(box :orientation "vertical" :class "powermenu" :space-evenly false :valign "center"
+(button :width 35 :valign "center" :halign "center" :class "powermenu" :onclick "poweroff" "󰐥" )
+(button :width 35 :valign "center" :halign "center" :class "powermenu" :onclick "bspc quit" "" )
+(button :width 35 :valign "center" :halign "center" :class "powermenu" :onclick "reboot" "")
+))
+(defwidget powermenu []
+(box :orientation "vertical" :space-evenly "false" :class "powermenu"
+(separ2)
+(pl)
+(separ1)))
+
+;workspacestuff - button first
+(defwidget workspacebutton []
+  (eventbox :onhoverlost "eww update workplacerev=false" :class "powerbutton1" 
+    (box :space-evenly false :halign "start" :width 40
+      (button :class "powerbutton1" :onclick "eww update workplacerev=true" :onrightclick "eww update workplacerev=false" "󰍺"  )
+      (revealer :reveal workplacerev :transition "slideleft" :duration "300ms"
+        (box :halign "start" :space-evenly "false"
+          (box :width 10 :class "boxxx")
+          (label :class "powerbutton55" :text "")
+          (workspacemenu1)
+          (minisep2)
+          (workspacemenu2)) )
+)))
+
+;POWERMENUDROPDOWN
+(defwindow powermenu
+  :geometry (geometry 
+  :x -25
+  :y 54
+  :width 35
+  :height 100
+  :anchor "top right")
+  :windowtype "Desktop"
+ :wm-ignore "true"
+   :stacking "fg"
+  :orientation "vertical"
+:space-evenly false
+(powermenu))
+;workspaces for left desktop
+(defwidget workspacemenu1 []
+(box :orientation "horizontal" :space-evenly "false" :class "workspacerevealer" :halign "start"
+(eventbox :width 35 :onclick "eww update clickworkspace1=0; eww update clickworkspace2=1; eww update clickworkspace3=1; sh -c 'bspc desktop -f I'" :valign "center" 
+(stack :selected clickworkspace1 :transition "none"
+(label :halign "center" :text "") ;0
+(label :halign "center" :text ""))) ;1
+(eventbox :width 35 :onclick "eww update clickworkspace1=1; eww update clickworkspace2=0; eww update clickworkspace3=1; sh -c 'bspc desktop -f II'" :valign "center" 
+(stack :selected clickworkspace2 :transition "none"
+(label :halign "center" :text "") ;0
+(label :halign "center" :text ""))) ;1
+(eventbox :width 35 :onclick "eww update clickworkspace1=1; eww update clickworkspace2=1; eww update clickworkspace3=0; sh -c 'bspc desktop -f III'" :valign "center" 
+(stack :selected clickworkspace3 :transition "none"
+(label :halign "center" :text "") ;0
+(label :halign "center" :text ""))))) ;1
+;seps for workspace menu - sorta mini spaces for dark backgrounds
+(defwidget minisep2 []
+(box :width 5 :space-evenly "false" :halign "center"
+(label :class "sep2" :text "|")))
+(defwidget sep2 []
+(box))
+
+(defwidget workspacemenu2 []
+(box :orientation "horizontal" :space-evenly "false" :class "workspacerevealer" :halign "start"
+(eventbox :width 35 :onclick "eww update clickworkspace4=0; eww update clickworkspace5=1; eww update clickworkspace6=1; sh -c 'bspc desktop -f IV'" :valign "center" 
+(stack :selected clickworkspace4 :transition "none"
+(label :halign "center" :text "") ;0
+(label :halign "center" :text ""))) ;1
+(eventbox :width 35 :onclick "eww update clickworkspace4=1; eww update clickworkspace5=0; eww update clickworkspace6=1; sh -c 'bspc desktop -f V'" :valign "center" 
+(stack :selected clickworkspace5 :transition "none"
+(label :halign "center" :text "") ;0
+(label :halign "center" :text ""))) ;1
+(eventbox :width 35 :onclick "eww update clickworkspace4=1; eww update clickworkspace5=1; eww update clickworkspace6=0; sh -c 'bspc desktop -f VI'" :valign "center" 
+(stack :selected clickworkspace6 :transition "none"
+(label :halign "center" :text "") ;0
+(label :halign "center" :text ""))))) ;1)
+
+(defwindow menu 
+  :geometry (geometry 
+  :x 0
+  :y 0
+  :width "80%"
+  :height "80%"
+  :anchor "center")
+  :windowtype "toolbar"
+:wm-ignore "false"
+:stacking "bg"
+:orientation "vertical"
+:space-evenly false
+:monitor "1"
+  (box :class "close-background"))
+
+
+(defwindow to-do-list 
+  :geometry (geometry 
+  :x -285
+  :y 2
+  :width "35%"
+  :height "35%"
+  :anchor "center right")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false
+:monitor "1"
+  (button))
+
+(defwindow bottomleft1
+  :geometry (geometry 
+  :x 255
+  :y 285
+  :width "10%"
+  :height "10%"
+  :anchor "center left")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false
+  (button))
+
+(defwindow clock
+   :geometry (geometry 
+  :x -70
+  :y 10
+  :width "3%"
+  :height "40"
+  :anchor "top right")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "horizontal"
+:space-evenly true
+  (clock))
+
+(defwindow date
+   :geometry (geometry 
+  :x -155
+  :y 10
+  :width "3%"
+  :height "40"
+  :anchor "top right")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "horizontal"
+:space-evenly false
+  (date))    
+
+(defwindow powerbutton 
+   :geometry (geometry 
+  :x -25
+  :y 10
+  :width "30"
+  :height "40"
+  :anchor "top right")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false
+  (power))
+
+(defwindow workspaces1
+   :geometry (geometry 
+  :x 20
+  :y 10
+  :width "30"
+  :height "40"
+  :anchor "top left")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false    
+ (workspacemenu1))
+
+ (defwindow workspaces2
+   :geometry (geometry 
+  :x 135
+  :y 10
+  :width "30"
+  :height "40"
+  :anchor "top left")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false    
+ (workspacemenu2)) 
+
+(defwidget btbutton []
+(box :class "bluetooth"(button :onclick "eww open btdropdown" :onrightclick "eww close btdropdown" "" )))
+
+(defwindow btbutton
+ :geometry (geometry 
+  :x -942
+  :y 10
+  :width "30"
+  :height "40"
+  :anchor "top center")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false
+(btbutton))
+
+(defwidget btl []
+(box :orientation "vertical" :class "powermenu" :space-evenly false :valign "center"
+(button :width 35 :valign "center" :halign "center" :class "bluetoothmenu" :onrightclick "echo 'disconnect 3C:5C:C4:05:EA:E4' | bluetoothctl" :onclick "echo 'connect 3C:5C:C4:05:EA:E4' | bluetoothctl" "󰓃" )
+(button :width 35 :valign "center" :halign "center" :class "bluetoothmenu" :onrightclick "echo 'disconnect 80:99:E7:C2:1E:A4' | bluetoothctl" :onclick "echo 'connect 80:99:E7:C2:1E:A4' | bluetoothctl" "󰋋" )
+))
+(defwidget btdropdown []
+(box :orientation "vertical" :space-evenly "false" :class "powermenu"
+(separ2)
+(btl)
+(separ1)))
+
+  ;BTMENUDROPDOWN
+(defwindow btdropdown
+  :geometry (geometry 
+  :x -942
+  :y 54
+  :width 35
+  :height 100
+  :anchor "top center")
+  :windowtype "Desktop"
+ :wm-ignore "true"
+   :stacking "fg"
+  :orientation "vertical"
+:space-evenly false
+(btdropdown))
+
+(defwidget sbutton []
+(box :class "sound"(button :onclick "eww open sdropdown ; eww open volslide" :onrightclick "eww close sdropdown ; eww close volslide" "" )))
+
+(defwindow sbutton
+ :geometry (geometry 
+  :x -902
+  :y 10
+  :width "30"
+  :height "40"
+  :anchor "top center")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false
+(sbutton))
+
+(defwidget slist []
+(box :orientation "vertical" :class "powermenu" :space-evenly false :valign "center"
+(button :width 35 :valign "center" :halign "center" :class "bluetoothmenu" :onclick "pactl set-default-sink alsa_output.usb-SteelSeries_Arctis_Nova_3-00.analog-stereo.2" "󰋋" )
+(button :width 35 :valign "center" :halign "center" :class "bluetoothmenu" :onclick "pactl set-default-sink bluez_output.3C_5C_C4_05_EA_E4.1" "󰦢" )
+(button :width 35 :valign "center" :halign "center" :class "bluetoothmenu" :onclick "pactl set-default-sink bluez_output.80_99_E7_C2_1E_A4.1" "󰋍" )
+))
+(defwidget sdropdown []
+(box :orientation "vertical" :space-evenly "false" :class "powermenu"
+(separ2)
+(slist)
+(separ1)))
+
+(defwindow sdropdown
+  :geometry (geometry 
+  :x -902
+  :y 54
+  :width 35
+  :height 100
+  :anchor "top center")
+  :windowtype "Desktop"
+ :wm-ignore "true"
+   :stacking "fg"
+  :orientation "vertical"
+:space-evenly false
+(sdropdown))
+
+(defwindow volslide
+   :geometry (geometry 
+  :x -790
+  :y 13
+  :width 180
+  :height 32
+  :anchor "top center")
+   :windowtype "Desktop"
+ :wm-ignore "true"
+   :stacking "fg"
+  :orientation "horizontal"
+:space-evenly false
+  (box :class "powermenu" :space-evenly false (box :width 15) (box :width 150 (scale :value "${volume}" :class "powermenu" :orientation "horizontal" :round-digits 0 :onchange "amixer -D pulse sset Master {}%" :flipped false :min 0 :max 101))(box :width 15)))
+
+(defvar fanbuttons 0)    
+
+(defwidget fanb[] 
+(box (stack :selected fanbuttons 
+(button :class "fans1" :onclick "/home/artemiy/Rice/fantctrl/fanhigh.sh ; eww update fanbuttons=1"  "󱑰")
+(button :class "fans2" :onclick "/home/artemiy/Rice/fantctrl/fanlow.sh ; eww update fanbuttons=0" "󱑯")
+  )))
+(defwindow fans1
+   :geometry (geometry 
+  :x -990
+  :y 10
+  :width 50
+  :height 40
+  :anchor "top center")
+   :windowtype "Desktop"
+ :wm-ignore "false"
+   :stacking "fg"
+  :orientation "horizontal"
+:space-evenly false (fanb))
+
+(defwidget steam [] 
+(box :class "steam"(button :onclick "steam" "" )))
+
+(defwindow steam 
+:geometry (geometry 
+  :x 1008
+  :y 10
+  :width "40"
+  :height "40"
+  :anchor "top center")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false
+(steam))
+
+(defwidget discord [] 
+(box :class "discord"(button :onclick "flatpak run com.discordapp.Discord
+" "" )))
+
+(defwindow discord 
+:geometry (geometry 
+  :x 963
+  :y 10
+  :width "40"
+  :height "40"
+  :anchor "top center")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false
+(discord))  
+
+(defvar doubleclick 0)
+(defwidget websites [] 
+(stack :selected doubleclick :class "sound"
+(button :onclick "eww update doubleclick=1 ; eww open websitebar" :onrightclick "eww close websitebar" "󰈹" )
+(button :onclick "eww update doubleclick=0 ; firefox ; eww close websitebar" :onrightclick "eww close websitebar ; eww update doubleclick=0" "󰈹" )))
+
+(defwindow websites
+:geometry (geometry 
+  :x 918
+  :y 10
+  :width "40"
+  :height "40"
+  :anchor "top center")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false
+(websites))  
+
+(defwidget websitelist []
+(box :orientation "vertical" :class "powermenu" :space-evenly false :valign "center"
+(button :width 35 :valign "center" :halign "center" :class "youtube" :onclick "xdg-open https:www.youtube.com" "󰗃" )
+(button :width 35 :valign "center" :halign "center" :class "cgpt" :onclick "xdg-open https:chatgpt.com" "󰜍" )
+(button :width 35 :valign "center" :halign "center" :class "netflix" :onclick "xdg-open https:www.netflix.com" "󰝆" )
+(button :width 35 :valign "center" :halign "center" :class "bluetooth" :onclick "xdg-open https://www.nerdfonts.com/cheat-sheet" "󱑷" )
+))
+(defwidget websitebar []
+(box :orientation "vertical" :space-evenly "false" :class "powermenu"
+(separ2)
+(websitelist)
+(separ1)))
+
+(defwindow websitebar
+  :geometry (geometry 
+  :x 918
+  :y 54
+  :width 35
+  :height 100
+  :anchor "top center")
+  :windowtype "Desktop"
+ :wm-ignore "true"
+   :stacking "fg"
+  :orientation "vertical"
+:space-evenly false
+(websitebar))
+
+(defwidget vscode [] 
+(box :class "vscode"(button :onclick "code" "" )))
+
+(defwindow vscode 
+:geometry (geometry 
+  :x 873
+  :y 10
+  :width "40"
+  :height "40"
+  :anchor "top center")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false
+(vscode))  
+
+(defwindow seperator1
+  :geometry (geometry 
+  :x -1028
+  :y 10
+  :width "14"
+  :height "40"
+  :anchor "top center")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false
+(box :class "powermenu" (minisep)))
+
+  (defwindow seperator2
+  :geometry (geometry 
+  :x 1038
+  :y 10
+  :width "10"
+  :height "40"
+  :anchor "top center")
+  :windowtype "Desktop"
+:wm-ignore "false"
+:stacking "fg"
+:orientation "vertical"
+:space-evenly false
+(box :class "powermenu" (minisep)))

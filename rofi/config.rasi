@@ -1,0 +1,51 @@
+configuration {
+  modes: [ combi ];
+  combi-modes: [ window, drun, run ];
+}
+
+@theme "~/.config/rofi/T3M1.rasi"
+ 
+/* Insert theme modifications after this */
+
+entry {
+    placeholder: "_____________________________________________________________________";
+    cursor: pointer;
+}
+
+element {
+  orientation: horizontal;
+  children: [ element-icon, element-text ];
+  spacing: 25px;
+  padding: 10px;
+}
+
+element-text {
+    vertical-align: 0.5;
+}
+
+element-icon {
+    size: 2.5em;
+}
+
+entry, element-text {
+  text-color: #c1bfad;
+}
+
+entry {
+  cursor-color: rgb(193, 191, 173);
+  cursor-width: 8px;
+  hide-cursor-on-empty: true;
+}
+
+window {
+    width: 25%;
+    location: center;
+    anchor: center;
+    y-offset: 0;
+    x-offset: 0;
+}
+
+mainbox {
+    padding: 5px;
+    border-radius: 5px;
+}

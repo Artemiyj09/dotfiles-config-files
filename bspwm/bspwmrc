@@ -1,0 +1,63 @@
+#!/bin/sh
+
+# Set monitor layout with xrandr
+xrandr --output eDP-1-0 --mode 2560x1440 --rate 165.00 --pos 0x0 --rotate normal \
+       --output DP-2 --mode 2560x1440 --rate 165.00 --pos 2560x0 --rotate normal
+
+# Tell bspwm about monitors and desktops
+bspc monitor eDP-1-0 -d I II III
+bspc monitor DP-2 -d IV V VI 
+
+# Start hotkey daemon if not running
+pgrep -x sxhkd > /dev/null || sxhkd &
+
+xset -dpms &
+xset s off &
+
+# Window appearance settings
+bspc config border_width         3
+bspc config normal_border_color "#a8a797"
+bspc config focused_border_color "#696556"
+bspc config window_gap          12
+bspc config split_ratio          0.50
+bspc config -m DP-2 top_padding   48
+bspc config borderless_monocle   true
+bspc config gapless_monocle      true
+bspc config remove_unmanaged true
+
+# Rules for specific apps
+bspc rule -a Alacritty border=normal state=floating
+bspc rule -a Nemo state=floating
+
+# Set wallpaper
+nitrogen --restore &
+
+# Load Pywal Xresources colors for terminals and X apps
+if [ -f ~/.cache/wal/colors.Xresources ]; then
+    xrdb -merge ~/.cache/wal/colors.Xresources
+fi
+
+# Source Pywal shell colors for terminals
+if [ -f ~/.cache/wal/colors.sh ]; then
+    source ~/.cache/wal/colors.sh
+fi
+
+picom &
+eww daemon &
+eww open workspaces1  &
+eww open workspaces2 &
+eww open btbutton &
+eww open powerbutton &
+eww open clock &
+eww open date &
+eww open seperator1 &
+eww open websites &
+eww open discord &
+eww open vscode &
+eww open steam &
+eww open fans1 &
+eww open sbutton &
+eww open seperator2 &
+
+# Finally, exec bspwm
+exec bspwm

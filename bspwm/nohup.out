@@ -1,0 +1,5 @@
+[ 26/06/25 12:50:48.439 parse_blur_method WARN ] Blur method 'kawase' has been renamed to 'dual_kawase'. Interpreted as 'dual_kawase', but this will stop working soon.
+[ 26/06/25 12:50:48.439 parse_kawase_blur_strength INFO ] blur-strength: 7 [.iter = 3, .offset = 4.250000, .expand = 50]
+[ 26/06/25 12:50:48.440 session_init FATAL ERROR ] Another composite manager is already running
+[ 27/06/25 02:06:55.857 session_init FATAL ERROR ] Another composite manager is already running
+[ 27/06/25 02:06:55.857 main FATAL ERROR ] Failed to create new session.
